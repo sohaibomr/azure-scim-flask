@@ -105,6 +105,20 @@ And **Save**.
 You should now be set on the Okta side to start testing the SCIM server.
 
 
-This covers the basic functionality of SCIM integration from Okta. Other use-cases haven't been tested extensively and may need tweaking over time.
+## Links
+
+This example uses the following open source libraries:
+
+* [SCIM](http://www.simplecloud.info/)
+* [Flask](https://flask.palletsprojects.com/en/2.0.x/)
+* [PostgreSQL](https://www.postgresql.org/)
+
+## Help
+
+Please post any questions as comments on the [blog post], or visit our [Okta Developer Forums](https://devforum.okta.com/). You can also email developers@okta.com if would like to create a support ticket.
+
+## License
+
+Apache 2.0, see [LICENSE](LICENSE).
 
 [blog-post]: https://developer.okta.com/blog/TBD "Okta, SCIM and Flask"
