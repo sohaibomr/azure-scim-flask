@@ -1,0 +1,24 @@
+version: '3' # TODO: replae this with service profiles usaage
+services:
+  flask-scim:
+    image: flask-scim
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres-scim/scim
+    ports:
+      - "8002:8002"
+    command:
+      - "python"
+      - "app.py"
+    depends_on:
+      - postgres-scim
+    volumes:
+      - ./:/usr/src/app
+  postgres-scim:
+    image: "postgres"
+    command: [ "postgres", "-c", "log_statement=all" ]
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=scim

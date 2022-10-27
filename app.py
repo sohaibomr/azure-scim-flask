@@ -1,8 +1,14 @@
-from flask import Flask, jsonify, abort, make_response, request
-from flask_sqlalchemy import SQLAlchemy
+import logging
+import os
 from functools import wraps
+
+from flask import Flask, abort, jsonify, make_response, request
+from flask_sqlalchemy import SQLAlchemy
+
 from database import db
-from models import User, Group
+from models import Group, User
+
+log = logging.getLogger(__name__)
 
 
 def create_app():
@@ -12,8 +18,10 @@ def create_app():
     Implemented as a factory method to avoid a circular import error.
     """
     app = Flask(__name__)
-    app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://localhost/scim"
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv(
+        key="DATABASE_URL", default="postgresql://postgres:postgres@postgres-scim/scim"
+    )
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     db.init_app(app)
     return app
 
@@ -100,8 +108,8 @@ def get_user(user_id):
 @auth_required
 def create_user():
     """Create SCIM User"""
-    active = request.json.get("active")
-    displayName = request.json.get("displayName")
+    active = request.json.get("Active")
+    displayName = request.json.get("DisplayName")
     emails = request.json.get("emails")
     externalId = request.json.get("externalId")
     groups = request.json.get("groups")
@@ -131,7 +139,7 @@ def create_user():
             user = User(
                 active=active,
                 displayName=displayName,
-                emails_primary=emails[0]["primary"],
+                emails_Primary=emails[0]["Primary"],
                 emails_value=emails[0]["value"],
                 emails_type=emails[0]["type"],
                 externalId=externalId,
@@ -151,13 +159,14 @@ def create_user():
                     if existing_group:
                         existing_group.users.append(user)
                     else:
-                        new_group = Group(displayName=group["displayName"])
+                        new_group = Group(displayName=group["DisplayName"])
                         db.session.add(new_group)
                         new_group.users.append(user)
 
             db.session.commit()
             return make_response(jsonify(user.serialize()), 201)
         except Exception as e:
+            log.exception(msg=e)
             return str(e)
 
 
@@ -180,8 +189,8 @@ def update_user(user_id):
         )
     else:
         groups = request.json.get("groups")
-        user.active = request.json.get("active")
-        user.displayName = request.json.get("displayName")
+        user.active = request.json.get("Active")
+        user.displayName = request.json.get("DisplayName")
         user.emails = request.json.get("emails")
         user.externalId = request.json.get("externalId")
         user.locale = request.json.get("locale")
@@ -201,7 +210,7 @@ def update_user(user_id):
 @auth_required
 def deactivate_user(user_id):
     """Deactivate SCIM User"""
-    is_user_active = request.json["Operations"][0]["value"]["active"]
+    is_user_active = request.json["Operations"][0]["value"]["Active"]
     user = User.query.get(user_id)
     user.active = is_user_active
 
@@ -241,7 +250,7 @@ def get_group(group_id):
 @auth_required
 def create_group():
     """Create SCIM Group"""
-    displayName = request.json["displayName"]
+    displayName = request.json["DisplayName"]
     members = request.json["members"]
 
     try:
@@ -296,4 +305,4 @@ def delete_group(group_id):
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, port=8002, host="0.0.0.0")
